@@ -1,8 +1,17 @@
 <script setup>
+import { getAuth, signOut } from 'firebase/auth';
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
 const logout = () => {
-  // Lógica para cerrar sesión
-  console.log("Cerrando sesión...");
-}
+  const auth = getAuth();
+  signOut(auth).then(() => {
+    router.push("/iniciarsesion");
+  }) .catch((error) => {
+    console.error(error);
+  });
+};
 </script>
 
 <template>
