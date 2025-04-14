@@ -31,7 +31,7 @@
 
           <!-- Link Registrarse -->
           <div class="d-flex justify-content-end">
-            <a href="#" class="text-primary">Registrarse</a>
+            <a href="/" class="text-primary">Registrarse</a>
           </div>
 
           
@@ -60,10 +60,6 @@ export default {
 </script>
 
 <style scoped>
-.container {
-  background-color: #f8f9fa;
-}
-.card {
-  border-radius: 1rem;
-}
+
+
 </style>
