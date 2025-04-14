@@ -13,6 +13,12 @@ const router = createRouter({
       name: 'IniciarSesion',
       component: () => import('../views/IniciarSesion.vue'),
     },
+
+    {
+      path: '/lobby',
+      name: 'lobby',
+      component: () => import('../views/Lobby.vue'),
+    },
   ],
 })
 
