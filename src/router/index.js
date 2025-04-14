@@ -14,7 +14,7 @@ const router = createRouter({
       component: () => import('../views/IniciarSesion.vue'),
     },
     {
-      path: '/Registro',
+      path: '/',
       name: 'Registro',
       component: () => import('../views/Registro.vue'),
 

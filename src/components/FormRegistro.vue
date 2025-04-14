@@ -47,7 +47,7 @@
   
             <!-- Link Iniciar Sesión -->
             <div class="d-flex justify-content-end">
-              <a href="/src/views/IniciarSesion.vue" class="text-primary">¿Ya tienes cuenta? Inicia sesión</a>
+              <a href="/iniciarsesion" class="text-primary">¿Ya tienes cuenta? Inicia sesión</a>
             </div>
   
           </div>
