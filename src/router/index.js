@@ -13,7 +13,12 @@ const router = createRouter({
       name: 'IniciarSesion',
       component: () => import('../views/IniciarSesion.vue'),
     },
+    {
+      path: '/Registro',
+      name: 'Registro',
+      component: () => import('../views/Registro.vue'),
 
+    },
     {
       path: '/lobby',
       name: 'lobby',
