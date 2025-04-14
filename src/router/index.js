@@ -8,6 +8,11 @@ const router = createRouter({
       name: 'game-board',
       component: () => import('../views/GameBoard.vue'),
     },
+    {
+      path: '/iniciarsesion',
+      name: 'IniciarSesion',
+      component: () => import('../views/IniciarSesion.vue'),
+    },
   ],
 })
 
