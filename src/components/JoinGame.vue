@@ -3,17 +3,19 @@
     <div class="logo-container">
         <Logo/>
     </div>
-    <h2>Ingresar Código</h2>
-    <div class="input-container">
-        <input 
-        type="text" 
-        class="joingame-input" 
-        placeholder="Código de la partida">
-    </div>
-    <div class="btn-container">
-        <button 
-        class="btn-joingame">
-        Ingresar a la partida</button>
+    <div class="form-container">
+        <h2>Ingresar Código</h2>
+        <div class="input-container">
+            <input 
+            type="text" 
+            class="joingame-input" 
+            placeholder="Código de la partida">
+        </div>
+        <div class="btn-container">
+            <button 
+            class="btn-joingame">
+            Ingresar a la partida</button>
+        </div>
     </div>
 </div>
 </template>
@@ -33,6 +35,13 @@ import Logo from '@/components/Logo.vue';
     text-align: center;
     position: center;
     font-weight: bold;
+}
+.form-container{
+    border: 1px solid black;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 5px rgba(26, 25, 25, 0.526);
+    padding: 30px;
     gap: 15px;
 }
 .joingame-input{
