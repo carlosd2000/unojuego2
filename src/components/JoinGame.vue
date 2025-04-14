@@ -72,6 +72,8 @@ import Logo from '@/components/Logo.vue';
     width: 100%;
 }
 .btn-joingame:hover{
-    transform: translateY(-2px);
+    background-color: #ffffff; 
+    color: #000000; 
+    border-color: #000000;
 }
 </style>
