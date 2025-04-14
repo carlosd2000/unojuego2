@@ -28,6 +28,11 @@ const router = createRouter({
       path: "/joingame",
       name: "JoinGame",
       component: () => import("../views/JoinGame.vue")
+    },
+    {
+      path: '/pregameroom',
+      name: 'pregameroom',
+      component: () => import('../views/PreGameRoom.vue'),
     }
   ],
 })
