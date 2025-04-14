@@ -57,26 +57,61 @@
   </template>
   
   <script>
-  export default {
-    name: "Registro",
-    data() {
-      return {
-        nombre: '',
-        correo: '',
-        contrasena: ''
-      };
-    },
-    methods: {
-      registrarse() {
-        console.log("Datos de registro:", {
+import { db, auth } from '../firebase/config';
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { collection, addDoc } from "firebase/firestore";
+
+export default {
+  name: "Registro",
+  data() {
+    return {
+      nombre: '',
+      correo: '',
+      contrasena: '',
+      error: null
+    };
+  },
+  methods: {
+    async registrarse() {
+      try {
+        // Validación básica
+        if (!this.nombre || !this.correo || !this.contrasena) {
+          throw new Error("Todos los campos son obligatorios");
+        }
+
+        // 1. Crear usuario en Authentication
+        const userCredential = await createUserWithEmailAndPassword(
+          auth, // Usamos el auth importado de tu config
+          this.correo,
+          this.contrasena
+        );
+        
+        // 2. Guardar datos en Firestore
+        await addDoc(collection(db, "usuarios"), {
+          uid: userCredential.user.uid,
           nombre: this.nombre,
-          correo: this.correo,
-          contrasena: this.contrasena
+          email: this.correo,
+          fechaRegistro: new Date()
         });
+
+        console.log("Usuario creado en Auth y Firestore");
+        this.$router.push('/iniciarsesion');
+        
+      } catch (error) {
+        console.error("Error:", error);
+        this.error = this.traducirError(error.code) || error.message;
       }
+    },
+    traducirError(codigo) {
+      const errores = {
+        'auth/email-already-in-use': 'El correo ya está registrado',
+        'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres'
+      };
+      return errores[codigo];
     }
-  };
-  </script>
+  }
+};
+</script>
   
   <style scoped>
   /* Estilos originales sin cambios */
