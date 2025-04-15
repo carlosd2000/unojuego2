@@ -1,8 +1,30 @@
 import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, addDoc, Timestamp, serverTimestamp, query, where, getDocs } from "firebase/firestore";
 import { AuthService } from './auth'; // Importamos el AuthService
+import { getAuth } from 'firebase/auth'
 
 const db = getFirestore();
 
+
+
+export const getPlayerIdByCurrentUser = async () => {
+    const auth = getAuth()
+    const currentUser = auth.currentUser
+  
+    if (!currentUser) {
+      throw new Error('Usuario no autenticado.')
+    }
+  
+    const q = query(collection(db, 'players'), where('user_id', '==', currentUser.uid))
+    const querySnapshot = await getDocs(q)
+  
+    if (querySnapshot.empty) {
+      throw new Error('No se encontró un player para este usuario.')
+    }
+  
+    // Devolvemos el ID del documento (player_id)
+    console.log("player id: ", querySnapshot.docs[0].id)
+    return querySnapshot.docs[0].id
+  }
 const generateRoomCode = () => {
     const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ123456789'; // sin letras/confusas como O/0/I
     return Array.from({ length: 6 }, () =>
@@ -159,7 +181,7 @@ export async function obtenerOCrearJugador() {
 }
 
 
-export { crearSala, unirseASala };
+export { crearSala, unirseASala};
 
 
 

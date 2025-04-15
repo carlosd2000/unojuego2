@@ -188,23 +188,23 @@ const getCardIcon = () => {
   color: white;
 }
 
-.red {
+.rojo {
   background-color: #ff4444;
 }
 
-.blue {
+.azul {
   background-color: #4444ff;
 }
 
-.green {
+.verde {
   background-color: #44ff44;
 }
 
-.yellow {
+.amarillo {
   background-color: #ffff44;
 }
 
-.black {
+.negro {
   background-color: #000000;
 }
 

@@ -6,17 +6,23 @@ import DeckOutCard from '../components/DeckOutCard.vue'
 import DeckInCard from '../components/DeckInCard.vue'
 import UnoButton from '../components/UnoButton.vue'
 import ExitButton from '../components/ExitButton.vue'
-import { ref } from 'vue'
+
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { db } from '../firebase/config'
+import { collection, query, where, getDocs } from 'firebase/firestore'
 
 const currentCard = ref({ number: '7', color: 'red' })
+const participants = ref([])
+
+const route = useRoute()
+const gameId = route.params.gameId  // El valor de gameId proviene de los parámetros de la URL
 
 const handleUnoCalled = () => {
-  // Aquí puedes agregar la lógica cuando se presiona el botón UNO
   console.log('¡UNO! fue llamado')
 }
 
 const handleExitGame = () => {
-  // Aquí puedes agregar la lógica para salir del juego
   console.log('Saliendo del juego...')
 }
 
@@ -24,6 +30,43 @@ const handleCardPlayed = (cardData) => {
   console.log('Carta jugada:', cardData)
   currentCard.value = cardData
 }
+
+const loadParticipants = async () => {
+  if (!gameId) {
+    console.error('No se encontró el ID del juego')
+    return
+  }
+
+  const gamesQuery = query(
+    collection(db, 'games'),
+    where('code', '==', gameId)  // Buscamos donde el campo 'code' sea igual al gameId
+  )
+
+  const querySnapshot = await getDocs(gamesQuery)
+
+  if (querySnapshot.empty) {
+    console.log('No se encontró el juego con el ID proporcionado')
+    return
+  }
+
+  const gameDoc = querySnapshot.docs[0]
+  const participantsQuery = query(
+    collection(db, 'games', gameDoc.id, 'participants')
+  )
+
+  const participantsSnapshot = await getDocs(participantsQuery)
+  participants.value = participantsSnapshot.docs.map(doc => doc.data())
+
+  console.log('Cantidad de participantes:', participants.value.length)
+}
+
+onMounted(() => {
+  if (gameId) {
+    loadParticipants()
+  } else {
+    console.error('ID del juego no disponible')
+  }
+})
 </script>
 
 <template>
@@ -33,28 +76,28 @@ const handleCardPlayed = (cardData) => {
     </div>
     <div class="game-layout">
       <!-- Oponente superior -->
-      <div class="opponent-section top">
+      <div class="opponent-section top" v-if="participants.length > 1">
         <div class="row align-items-center justify-content-center">
           <div class="col-2">
             <DeckInCard />
           </div>
           <div class="col-2">
-            <AvatarUser name="Oponente 1" :score="0" :isTurn="false" />
+            <AvatarUser v-if="participants[1]" :name="participants[1].nickname" :score="0" :isTurn="false" />
           </div>
           <div class="col-6">
-            <HandOpponent />
+            <HandOpponent v-if="participants[1]" />
           </div>
         </div>
       </div>
 
       <div class="middle-section">
         <!-- Oponente izquierdo -->
-        <div class="opponent-section left">
+        <div class="opponent-section left" v-if="participants.length > 2">
           <div class="row align-items-center">
             <div class="col-12">
               <div class="d-flex flex-column align-items-center">
-                <AvatarUser name="Oponente 2" :score="0" :isTurn="false" />
-                <HandOpponent :isVertical="true" rotateDirection="left" />
+                <AvatarUser v-if="participants[2]" :name="participants[2].nickname" :score="0" :isTurn="false" />
+                <HandOpponent v-if="participants[2]" :isVertical="true" rotateDirection="left" />
               </div>
             </div>
           </div>
@@ -68,12 +111,12 @@ const handleCardPlayed = (cardData) => {
         </div>
 
         <!-- Oponente derecho -->
-        <div class="opponent-section right">
+        <div class="opponent-section right" v-if="participants.length > 3">
           <div class="row align-items-center">
             <div class="col-12">
               <div class="d-flex flex-column align-items-center">
-                <AvatarUser name="Oponente 3" :score="0" :isTurn="false" />
-                <HandOpponent :isVertical="true" rotateDirection="right" />
+                <AvatarUser v-if="participants[3]" :name="participants[3].nickname" :score="0" :isTurn="false" />
+                <HandOpponent v-if="participants[3]" :isVertical="true" rotateDirection="right" />
               </div>
             </div>
           </div>
@@ -84,7 +127,7 @@ const handleCardPlayed = (cardData) => {
       <div class="player-section">
         <div class="row align-items-center">
           <div class="col-2">
-            <AvatarUser name="Jugador" :score="0" :isTurn="true" />
+            <AvatarUser v-if="participants[0]" :name="participants[0].nickname" :score="0" :isTurn="true" />
           </div>
           <div class="col-8">
             <HandPlayer @card-played="handleCardPlayed" />
@@ -97,6 +140,7 @@ const handleCardPlayed = (cardData) => {
     </div>
   </main>
 </template>
+
 
 <style scoped>
 .game-container {
