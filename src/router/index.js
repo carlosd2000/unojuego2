@@ -4,9 +4,9 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/gameBoard',
-      name: 'game-board',
-      component: () => import('../views/GameBoard.vue'),
+      path: '/game/:gameId',
+      name: 'GameBoard',
+      component: () => import('../views/GameBoard.vue') // Asegúrate de crear este componente
     },
     {
       path: '/iniciarsesion',

@@ -3,55 +3,71 @@ import Logo from "../components/Logo.vue"
 import PlayersList from "../components/PlayersList.vue"
 import RoomCode from "../components/RoomCode.vue"
 import StartGameBtn from "../components/StartGameBtn.vue"
-import { useRoute } from 'vue-router';
-import { ref, onMounted } from 'vue';
-import { db } from '../firebase/config'; // Asegúrate de tener la configuración de Firebase correcta
-import { collection, query, where, onSnapshot, doc, getDoc, getDocs } from 'firebase/firestore';
+import { useRoute, useRouter } from 'vue-router';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { db } from '../firebase/config';
+import { 
+  doc, 
+  onSnapshot, 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  getDoc,  // ¡Esta importación faltaba!
+  updateDoc 
+} from 'firebase/firestore';
 
 const route = useRoute();
+const router = useRouter();
 const gameId = route.params.gameId;
+const players = ref([]);
+let gameUnsubscribe = null;
+let playersUnsubscribe = null;
 
-const players = ref([]); // Este será el arreglo de jugadores que obtendrás de Firestore
-
-// Función para obtener jugadores de Firestore (inicialmente, al montar el componente)
-const getPlayers = async () => {
+const loadGameData = async () => {
   try {
-    const gameRef = collection(db, 'games');    
-    const gameQuery = query(gameRef, where('code', '==', gameId));
-    const gameSnap = await getDocs(gameQuery);
+    const gameQuery = query(collection(db, 'games'), where('code', '==', gameId));
+    const gameSnapshot = await getDocs(gameQuery);
 
-    if (!gameSnap.empty) {
-      const gameData = gameSnap.docs[0].data();
-      const participantsRef = collection(gameSnap.docs[0].ref, 'participants');
+    if (gameSnapshot.empty) return;
 
-      // Escuchar cambios en tiempo real en la subcolección 'participants'
-      onSnapshot(participantsRef, async (participantsSnap) => {
-        // Recuperar la información de los jugadores
-        players.value = [];
-        for (const participantDoc of participantsSnap.docs) {
-          const participantData = participantDoc.data();
-          const playerRef = doc(db, 'players', participantData.player_id);
-          const playerSnap = await getDoc(playerRef);
-          if (playerSnap.exists()) {
-            players.value.push(playerSnap.data());
-          }
+    const gameDocRef = doc(db, 'games', gameSnapshot.docs[0].id);
+    
+    gameUnsubscribe = onSnapshot(gameDocRef, (doc) => {
+      if (doc.exists() && doc.data().status === 'in_progress') {
+        router.push({ name: 'GameBoard', params: { gameId } });
+      }
+    });
+
+    const participantsRef = collection(gameSnapshot.docs[0].ref, 'participants');
+    playersUnsubscribe = onSnapshot(participantsRef, async (snap) => {
+      players.value = [];
+      for (const participantDoc of snap.docs) {
+        const participantData = participantDoc.data();
+        const playerDoc = await getDoc(doc(db, 'players', participantData.player_id));  // Aquí se usa getDoc
+        if (playerDoc.exists()) {
+          players.value.push({
+            ...playerDoc.data(),
+            id: participantData.player_id,
+            is_host: participantData.is_host || false
+          });
         }
-      });
-    } else {
-      console.log('No se encontró la sala.');
-    }
+      }
+      console.log("Jugadores actualizados:", players.value);
+    });
+
   } catch (error) {
-    console.error('Error al obtener jugadores:', error);
+    console.error("Error:", error);
   }
 };
 
-// Obtener los jugadores cuando se monta el componente
+onUnmounted(() => {
+  if (gameUnsubscribe) gameUnsubscribe();
+  if (playersUnsubscribe) playersUnsubscribe();
+});
+
 onMounted(() => {
-  if (gameId) {
-    getPlayers();
-  } else {
-    console.warn('No hay gameId definido aún');
-  }
+  if (gameId) loadGameData();
 });
 </script>
 
@@ -59,9 +75,8 @@ onMounted(() => {
   <div class="pregame-room">
     <Logo />
     <RoomCode :code="gameId" />
-    <!-- Ahora pasas los jugadores dinámicamente a PlayersList -->
     <PlayersList :players="players" />
-    <StartGameBtn />
+    <StartGameBtn :game-id="gameId" />
   </div>
 </template>
 
@@ -74,11 +89,6 @@ onMounted(() => {
   height: 100vh;
   background-color: #f8f9fa;
   padding: 20px;
-  gap: 30px; /* Espacio entre los componentes */
-}
-
-.pregame-room h3 {
-  font-size: 1.5rem;
-  color: #333;
+  gap: 30px;
 }
 </style>
