@@ -108,6 +108,14 @@ export const AuthService = {
     }
   },
 
+  getCurrentUserId() {
+    const user = auth.currentUser;
+    if (user) {
+      return user.uid; // Retorna el UID del usuario autenticado
+    }
+    throw new Error('No hay usuario autenticado');
+  },
+
   // Manejador de errores de autenticación
   handleAuthError(error) {
     const errorMessages = {

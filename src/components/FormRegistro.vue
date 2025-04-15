@@ -59,7 +59,7 @@
   <script>
 import { db, auth } from '../firebase/config';
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, setDoc, doc } from "firebase/firestore";
 
 export default {
   name: "Registro",
@@ -87,12 +87,12 @@ export default {
         );
         
         // 2. Guardar datos en Firestore
-        await addDoc(collection(db, "usuarios"), {
-          uid: userCredential.user.uid,
-          nombre: this.nombre,
-          email: this.correo,
-          fechaRegistro: new Date()
-        });
+        await setDoc(doc(db, "usuarios", userCredential.user.uid), {
+    uid: userCredential.user.uid,
+    nombre: this.nombre,
+    email: this.correo,
+    fechaRegistro: new Date()
+});
 
         console.log("Usuario creado en Auth y Firestore");
         this.$router.push('/iniciarsesion');
