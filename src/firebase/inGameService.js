@@ -16,56 +16,81 @@ const getCards = async () => {
 };
 
 // Asignar 7 cartas aleatorias a cada participante
-export const assignCardsToParticipants = async (gameId) => {
-    try {
-      const cards = await getCards();
-      if (cards.length === 0) {
-        console.log('No hay cartas disponibles.');
+export const assignCardsToParticipants = async (gameId, currentPlayerId) => {
+  console.log('Iniciando la asignación de cartas para el juego:', gameId);
+
+  try {
+    const cards = await getCards();
+    if (cards.length === 0) {
+      console.log('No hay cartas disponibles.');
+      return;
+    }
+    console.log(`Se obtuvieron ${cards.length} cartas disponibles.`);
+
+    const gameRef = collection(db, 'games');
+    const gameQuery = query(gameRef, where('code', '==', gameId));
+    const gameSnap = await getDocs(gameQuery);
+
+    if (!gameSnap.empty) {
+      const gameDoc = gameSnap.docs[0];
+      console.log('Juego encontrado:', gameDoc.data());
+
+      const cardInstancesRef = collection(gameDoc.ref, 'card_instances');
+      const cardInstancesSnap = await getDocs(cardInstancesRef);
+
+      if (!cardInstancesSnap.empty) {
+        console.log('Ya se asignaron cartas previamente. No se reasignan.');
+        return; // Evitamos volver a asignar si ya hay cartas
+      }
+
+      const participantsRef = collection(gameDoc.ref, 'participants');
+      const participantsSnap = await getDocs(participantsRef);
+
+      if (participantsSnap.empty) {
+        console.log('No se encontraron participantes para este juego.');
         return;
       }
-  
-      const gameRef = collection(db, 'games');
-      const gameQuery = query(gameRef, where('code', '==', gameId));
-      const gameSnap = await getDocs(gameQuery);
-  
-      if (!gameSnap.empty) {
-        const gameDoc = gameSnap.docs[0];
-        const cardInstancesRef = collection(gameDoc.ref, 'card_instances');
-        const cardInstancesSnap = await getDocs(cardInstancesRef);
-  
-        if (!cardInstancesSnap.empty) {
-          console.log('Ya se asignaron cartas previamente. No se reasignan.');
-          return; // Evitamos volver a asignar si ya hay cartas
-        }
-  
-        const participantsRef = collection(gameDoc.ref, 'participants');
-        const participantsSnap = await getDocs(participantsRef);
-  
-        for (const participantDoc of participantsSnap.docs) {
-          const participantData = participantDoc.data();
-          const playerId = participantData.player_id;
-          const assignedCards = getRandomCards(cards, 7);
-  
-          for (let i = 0; i < assignedCards.length; i++) {
-            const card = assignedCards[i];
+
+      console.log(`Se encontraron ${participantsSnap.size} participantes.`);
+      console.log(`Jugador encontrado: ${currentPlayerId}`);
+      // Buscar al participante actual por player_id
+      const currentParticipantDoc = participantsSnap.docs.find(doc => doc.data().player_id === currentPlayerId);
+
+      if (currentParticipantDoc) {
+        const currentPlayerId = currentParticipantDoc.data().player_id;
+       
+
+        // Obtener cartas aleatorias
+        const assignedCards = getRandomCards(cards, 7);
+        console.log(`Cartas asignadas al jugador ${currentPlayerId}:`, assignedCards);
+
+        for (let i = 0; i < assignedCards.length; i++) {
+          const card = assignedCards[i];
+          try {
+            console.log(`Agregando carta con id: ${card.id} al jugador ${currentPlayerId}, posición: ${i}`);
             await addDoc(cardInstancesRef, {
               card_id: doc(db, 'cards', card.id),
               location: 'hand',
-              current_owner_player_id: playerId,
+              current_owner_player_id: currentPlayerId,
               card_order: i
             });
+          } catch (error) {
+            console.error(`Error al asignar la carta con id ${card.id} al jugador ${currentPlayerId}:`, error);
           }
-  
-          console.log(`Se asignaron 7 cartas al jugador ${playerId}`);
         }
+
+        console.log(`Se asignaron 7 cartas al jugador ${currentPlayerId}`);
       } else {
-        console.log('Juego no encontrado.');
+        console.log('El jugador actual no se encuentra en los participantes.');
       }
-    } catch (error) {
-      console.error('Error al asignar las cartas:', error);
+    } else {
+      console.log('Juego no encontrado con el código:', gameId);
     }
-  };
-  
+  } catch (error) {
+    console.error('Error al asignar las cartas:', error);
+  }
+};
+
 
 // Función para obtener cartas aleatorias
 const getRandomCards = (cards, number) => {

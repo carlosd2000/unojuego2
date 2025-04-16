@@ -8,7 +8,7 @@ import { db } from '../firebase/config.js'
 import CardUNO from './CardUNO.vue'
 
 const emit = defineEmits(['card-played'])
-const hand = ref([])
+const hand = ref([]) // Las cartas del jugador actual
 const unsubscribe = ref(null) // Definir la referencia correctamente
 
 const handleCardPlayed = (cardData) => {
@@ -28,7 +28,7 @@ const loadCards = async () => {
 
     // 2. Asignar cartas
     console.log('Asignando cartas a los participantes...')
-    await assignCardsToParticipants(gameId)  // Usamos gameId para llamar la función
+    await assignCardsToParticipants(gameId, playerId)  // Ahora se pasa playerId a la función
 
     // 3. Obtener el documento del juego usando el campo 'code' como identificador
     const gamesRef = collection(db, 'games')
@@ -91,8 +91,6 @@ const loadCards = async () => {
   }
 }
 
-
-
 onMounted(() => {
   loadCards()
 })
@@ -104,6 +102,7 @@ onUnmounted(() => {
   }
 })
 </script>
+
 
 <template>
   <div class="hand-container">
